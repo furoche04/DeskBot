@@ -35,7 +35,20 @@ class FileOrganizer:
                 logger.error(f"Error scanning {watch_dir}: {str(e)}")
         logger.info(f"Found {len(files_to_organize)} files to potentially organize")
         return files_to_organize
-    
+
+    def scan_directories_from_list(self, dirs_list):
+        """Scan user-provided directories for files"""
+        files_to_organize = []
+        for watch_dir in dirs_list:
+            if watch_dir.exists():
+                for file_path in watch_dir.iterdir():
+                    if file_path.is_file() and not file_path.name.startswith('.'):
+                        files_to_organize.append(file_path)
+            else:
+                logger.warning(f"Directory does not exist: {watch_dir}")
+        logger.info(f"Found {len(files_to_organize)} files to potentially organize")
+        return files_to_organize
+
     def categorize_file(self, file_path: Path) -> str:
         """Determine the category for a file based on its extension"""
         return settings.get_category_for_extension(file_path.suffix)
