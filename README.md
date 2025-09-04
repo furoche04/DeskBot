@@ -5,15 +5,15 @@
 ## ✨ Key Features
 
 ### Automatic File Organization
-- **Sort files by type (images, documents, videos, code, etc.)
-- **Optional backups before moving files
+- Sort files by type (images, documents, videos, code, etc.)
+- Optional backups before moving files
 
 ### Simple Configuration
-- **Easily set directories, backup preferences, and log levels via .env
-- **Choose custom watch directories at runtime
+- Easily set directories, backup preferences, and log levels via .env
+- Choose custom watch directories at runtime
 
 ### Centralized Logging
-- **Logs to console and rotating file (data/logs/app.log)
+- Logs to console and rotating file (data/logs/app.log)
 
 ## 📁 Project Structure
 
