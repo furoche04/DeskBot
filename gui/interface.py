@@ -6,7 +6,7 @@ from pathlib import Path
 class OrganizerGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Desktop Smart Organizer")
+        self.root.title("DeskBot")
         self.root.geometry("650x500")
 
         # Buttons
