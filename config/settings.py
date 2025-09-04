@@ -9,24 +9,15 @@ class Settings:
     """Configuration settings for Desktop Smart Organizer"""
     
     def __init__(self):
+
         # Base paths
         self.PROJECT_ROOT = Path(__file__).parent.parent
         self.DATA_DIR = self.PROJECT_ROOT / "data"
         self.SCREENSHOTS_DIR = self.DATA_DIR / "screenshots"
         self.ORGANIZED_FILES_DIR = self.DATA_DIR / "organized_files"
         self.LOGS_DIR = self.DATA_DIR / "logs"
-        
-        # Create directories if they don't exist
-        self._create_directories()
-        
-        # File organization settings
-        self.WATCH_DIRECTORIES = [
-            Path.home() / "Downloads",
-            Path.home() / "Desktop",
-            # Add custom directories from env
-            *self._get_custom_watch_dirs()
-        ]
-        
+
+        # File categories
         self.FILE_CATEGORIES = {
             'images': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.svg'],
             'documents': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt'],
@@ -38,6 +29,17 @@ class Settings:
             'audio': ['.mp3', '.wav', '.flac', '.aac', '.ogg'],
             'code': ['.py', '.js', '.html', '.css', '.cpp', '.java', '.c']
         }
+
+        # Create directories if they don't exist
+        self._create_directories()
+        
+        # File organization settings
+        self.WATCH_DIRECTORIES = [
+            Path.home() / "Downloads",
+            Path.home() / "Desktop",
+            # Add custom directories from env
+            *self._get_custom_watch_dirs()
+        ]
         
         # Screenshot settings
         self.SCREENSHOT_FORMAT = os.getenv('SCREENSHOT_FORMAT', 'PNG')
