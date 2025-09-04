@@ -126,3 +126,19 @@ class Settings:
 
 # Global settings instance
 settings = Settings()
+
+# Convenience functions
+def get_screenshots_dir():
+    return settings.SCREENSHOTS_DIR
+
+def get_organized_files_dir():
+    return settings.ORGANIZED_FILES_DIR
+
+def get_logs_dir():
+    return settings.LOGS_DIR
+
+def is_auto_organize_enabled():
+    return settings.AUTO_ORGANIZE_ENABLED
+
+def is_ocr_enabled():
+    return settings.OCR_ENABLED
