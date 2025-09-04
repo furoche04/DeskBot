@@ -1,4 +1,4 @@
-# 🗂️ Desktop Smart Organizer
+# 🗂️ DeskBot
 
 > Automate your file organization with a simple Python tool. This mini version focuses on automatic sorting of files in watched directories with optional backups and logging. Users can now choose directories at runtime or use default ones (Downloads, Desktop).
 
