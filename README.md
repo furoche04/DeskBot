@@ -18,7 +18,7 @@
 ## 📁 Project Structure
 
 ```
-desktop-smart-organizer/
+DeskBot/
 │
 ├── 📄 README.md
 ├── 📄 requirements.txt
@@ -51,8 +51,8 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/furoche04/Desktop-Smart-Organizer.git
-   cd Desktop-Smart-Organizer
+   git clone https://github.com/furoche04/DeskBot.git
+   cd DeskBot
    ```
 
 2. **Create virtual environment** (recommended)
