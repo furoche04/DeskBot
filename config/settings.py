@@ -97,5 +97,32 @@ class Settings:
             return [Path(dir_path.strip()) for dir_path in custom_dirs.split(',')]
         return []
 
+    def get_category_for_extension(self, extension):
+        """Get file category for a given extension"""
+        extension = extension.lower()
+        for category, extensions in self.FILE_CATEGORIES.items():
+            if extension in extensions:
+                return category
+        return 'others'
+    
+    def get_organized_path(self, category, filename):
+        """Get the organized file path for a given category and filename"""
+        return self.ORGANIZED_FILES_DIR / category / filename
+    
+    def update_setting(self, key, value):
+        """Update a setting value dynamically"""
+        if hasattr(self, key):
+            setattr(self, key, value)
+            return True
+        return False
+    
+    def to_dict(self):
+        """Convert settings to dictionary for easy serialization"""
+        return {
+            key: str(value) if isinstance(value, Path) else value
+            for key, value in self.__dict__.items()
+            if not key.startswith('_')
+        }
+
 # Global settings instance
 settings = Settings()
