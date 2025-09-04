@@ -22,6 +22,7 @@ class FileOrganizer:
     def __init__(self):
         self.organized_count = 0
         self.error_count = 0
+        self.last_run = None
 
     def scan_directories(self):
         files = []
@@ -47,27 +48,23 @@ class FileOrganizer:
         backup_dir = settings.ORGANIZED_FILES_DIR / "backups"
         backup_dir.mkdir(parents=True, exist_ok=True)
         backup_path = backup_dir / file_path.name
-        shutil.copy2(file_path, backup_path)  # might overwrite duplicates
+        shutil.copy2(file_path, backup_path)  # overwrite risk
         return backup_path
 
     def is_safe_to_move(self, file_path: Path) -> bool:
-        """Check if file is safe to move"""
         try:
-            # Check if file is being written (size check)
             initial_size = file_path.stat().st_size
-            time.sleep(0.1)  # short wait
+            time.sleep(0.1)
             current_size = file_path.stat().st_size
             if initial_size != current_size:
                 print(f"{file_path.name} is being written to, skipping")
                 return False
 
-            # Check if file is too new
             age = time.time() - file_path.stat().st_mtime
-            if age < 10:  # 10 seconds, might still be downloading
+            if age < 10:
                 print(f"{file_path.name} is very recent ({age:.1f}s), skipping")
                 return False
 
-            # Try opening file
             try:
                 with open(file_path, 'rb') as f:
                     pass
@@ -83,7 +80,7 @@ class FileOrganizer:
     def move_file(self, file_path: Path):
         if not self.is_safe_to_move(file_path):
             print(f"Skipping {file_path.name} - not safe")
-            return
+            return False
         category = self.categorize_file(file_path)
         dest_dir = settings.ORGANIZED_FILES_DIR / category
         dest_dir.mkdir(parents=True, exist_ok=True)
@@ -93,13 +90,40 @@ class FileOrganizer:
             shutil.move(str(file_path), str(dest_path))
             self.organized_count += 1
             print(f"Moved {file_path.name} to {dest_dir}")
+            return True
         except Exception as e:
             self.error_count += 1
             logger.error(f"Error moving {file_path}: {e}")
+            return False
+
+    def organize_files(self, file_list=None):
+        """Organize multiple files and return stats"""
+        self.organized_count = 0
+        self.error_count = 0
+        self.last_run = datetime.now()
+
+        files_to_process = file_list or self.scan_directories()
+        category_counts = {}
+
+        for f in files_to_process:
+            try:
+                if self.move_file(f):
+                    category = self.categorize_file(f)
+                    category_counts[category] = category_counts.get(category, 0) + 1
+            except Exception as e:
+                logger.error(f"Error processing {f}: {e}")
+                self.error_count += 1
+
+        stats = {
+            'total_organized': self.organized_count,
+            'total_errors': self.error_count,
+            'last_run': self.last_run.isoformat(),
+            'categories': category_counts
+        }
+        return stats
 
 # test
 if __name__ == "__main__":
     fo = FileOrganizer()
-    files = fo.scan_directories()
-    for f in files:
-        fo.move_file(f)
+    stats = fo.organize_files()
+    print(stats)
