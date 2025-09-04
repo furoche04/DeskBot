@@ -44,7 +44,7 @@ desktop-smart-organizer/
 
 1. **Clone the repository**
    ```bash
-   git clone git clone https://github.com/furoche04/Desktop-Smart-Organizer.git
+   git clone https://github.com/furoche04/Desktop-Smart-Organizer.git
    cd Desktop-Smart-Organizer
    ```
 
