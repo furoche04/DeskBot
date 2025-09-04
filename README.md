@@ -28,10 +28,17 @@ desktop-smart-organizer/
 │   └── 📄 settings.py          # Configuration management
 ├── 📂 core/
 │   └── 📄 file_organizer.py    # File scanning, categorization, and moving
+├── 📂 demo_files/              # Dummy files for testing purposes
 └── 📂 utils/
     └── 📄 logger.py            # Centralized logging
 
 ```
+
+## 🗂️ Demo Files for Testing
+
+A demo_files folder is included in this repository for easy testing of the Desktop Smart Organizer.
+- Contains a mix of documents, images, spreadsheets, code files, videos, and archives
+- Includes some unrecognized or unusual file extensions to test the "others" category
 
 ## 🚀 Setup and Usage
 
