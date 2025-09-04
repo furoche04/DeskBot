@@ -1,6 +1,6 @@
 # 📊 Desktop Smart Organizer
 
-> Automate your file organization with a simple Python tool. This mini version focuses on automatic sorting of files in watched directories (Downloads, Desktop) with optional backups and logging.
+> Automate your file organization with a simple Python tool. This mini version focuses on automatic sorting of files in watched directories with optional backups and logging. Users can now choose directories at runtime or use default ones (Downloads, Desktop).
 
 ## ✨ Key Features
 
@@ -10,6 +10,7 @@
 
 ### Simple Configuration
 - **Easily set directories, backup preferences, and log levels via .env
+- **Choose custom watch directories at runtime
 
 ### Centralized Logging
 - **Logs to console and rotating file (data/logs/app.log)
