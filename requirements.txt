@@ -1,0 +1,41 @@
+# Desktop Smart Organizer Dependencies
+
+# Core automation libraries
+pywinauto>=0.6.8
+pyautogui>=0.9.54
+psutil>=5.9.0
+
+# Image processing and OCR
+Pillow>=9.5.0
+pytesseract>=0.3.10
+
+# Web automation
+selenium>=4.11.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Configuration and security
+python-dotenv>=1.0.0
+keyring>=24.2.0
+
+# GUI (built-in with Python, but listing for completeness)
+# tkinter - included with Python standard library
+
+# Development and testing
+pytest>=7.4.0
+pytest-mock>=3.11.1
+
+# Optional: Enhanced GUI (uncomment if needed)
+# tkinter-tooltip>=2.1.0
+
+# Optional: Additional image processing (uncomment if needed)
+# opencv-python>=4.8.0
+# numpy>=1.24.0
+
+# Optional: Enhanced logging (uncomment if needed)
+# colorlog>=6.7.0
+
+# Windows-specific dependencies (automatically installed on Windows)
+# comtypes>=1.2.0  # Required by pywinauto on Windows
+# pywin32>=306     # Required for Windows system integration
