@@ -8,12 +8,16 @@
 - Sort files by type (images, documents, videos, code, etc.)
 - Optional backups before moving files
 
+### Custom Directory Selection
+- Choose directories to organize at runtime via GUI
+- Supports default directories (Downloads, Desktop) as well as any folder
+  
 ### Simple Configuration
 - Easily set directories, backup preferences, and log levels via .env
-- Choose custom watch directories at runtime
 
 ### Centralized Logging
 - Logs to console and rotating file (data/logs/app.log)
+- GUI displays logs in real-time for user feedback
 
 ## 📁 Project Structure
 
@@ -29,6 +33,8 @@ DeskBot/
 ├── 📂 core/
 │   └── 📄 file_organizer.py    # File scanning, categorization, and moving
 ├── 📂 demo_files/              # Dummy files for testing purposes
+├── 📂 gui/
+│   └── 📄 interface.py         # GUI interface
 └── 📂 utils/
     └── 📄 logger.py            # Centralized logging
 
@@ -70,7 +76,7 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 4. **Copy and edit configuration**
    ```bash
     cp .env.example .env
-    # Edit .env as needed (custom watch directories, backup settings, log level)
+    # Edit .env as needed (backup settings, log level, etc.)
    ```
 
 5. **Run the organizer**
