@@ -2,8 +2,15 @@ import os
 from pathlib import Path
 import logging
 
-# TODO: add settings import later
-# from config.settings import settings
+class Settings:
+    FILE_CATEGORIES = {
+        '.txt': 'Text',
+        '.jpg': 'Images',
+        '.png': 'Images',
+        '.pdf': 'Documents',
+    }
+
+settings = Settings()
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +36,17 @@ class FileOrganizer:
         
         return files
 
+    def categorize_file(self, file_path: Path):
+        """Categorize file based on extension (simple version)"""
+        ext = file_path.suffix.lower()
+        category = settings.FILE_CATEGORIES.get(ext, 'Other')
+
+        print(f"{file_path.name} categorized as {category}")
+        return category
+
 # test
 if __name__ == "__main__":
     fo = FileOrganizer()
-    print(fo.scan_directories()) 
-
+    files = fo.scan_directories()
+    for f in files:
+        fo.categorize_file(f)
