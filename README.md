@@ -52,6 +52,7 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 - Python 3.8 or higher
 - pip package manager
 - Git (for cloning)
+- Tesseract OCR installed for OCR functionality (optional, see .env for TESSERACT_PATH)
 
 ### Installation Steps
 
@@ -76,7 +77,7 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 4. **Copy and edit configuration**
    ```bash
     cp .env.example .env
-    # Edit .env as needed (backup settings, log level, etc.)
+    # Edit .env as needed (backup settings, log level, OCR language, screenshot format, etc.)
    ```
 
 5. **Run the organizer**
@@ -86,4 +87,4 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 
 ## 🔄 Next Steps & Enhancements
 
-- **Screenshots & OCR**: integrate pyautogui and pytesseract
+- **TBA**
