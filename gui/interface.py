@@ -3,6 +3,8 @@ from tkinter import ttk, scrolledtext, filedialog, messagebox
 from pathlib import Path
 from datetime import datetime
 import threading
+import queue
+import time
 import csv
 
 from core.file_organizer import FileOrganizer
@@ -23,7 +25,7 @@ class DeskBotGUI:
         self.session_logs = []
 
         self.create_widgets()
-        self.update_system_stats()  # Start system monitoring
+        self.start_system_monitoring()  # Start system monitoring in background
 
     # ---------------- GUI Setup ----------------
     def create_widgets(self):
@@ -35,11 +37,6 @@ class DeskBotGUI:
         notebook.add(organizer_tab, text="Organizer")
         self.create_organizer_tab(organizer_tab)
 
-        # Logs Tab
-        logs_tab = ttk.Frame(notebook)
-        notebook.add(logs_tab, text="Logs")
-        self.create_logs_tab(logs_tab)
-
         # OCR Tab
         ocr_tab = ttk.Frame(notebook)
         notebook.add(ocr_tab, text="OCR")
@@ -50,6 +47,11 @@ class DeskBotGUI:
         notebook.add(system_tab, text="System")
         self.create_system_tab(system_tab)
 
+        # Logs Tab
+        logs_tab = ttk.Frame(notebook)
+        notebook.add(logs_tab, text="Logs")
+        self.create_logs_tab(logs_tab)
+
     # ---------------- Organizer ----------------
     def create_organizer_tab(self, parent):
         frame = ttk.LabelFrame(parent, text="File Organizer")
@@ -57,13 +59,14 @@ class DeskBotGUI:
 
         ttk.Button(frame, text="Organize Downloads", command=self.organize_downloads).pack(side="left", padx=5, pady=5)
         ttk.Button(frame, text="Organize Desktop", command=self.organize_desktop).pack(side="left", padx=5, pady=5)
-        ttk.Button(frame, text="Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
-        ttk.Button(frame, text="Export Logs & Usage to CSV", command=self.export_logs).pack(side="right", padx=5, pady=5)
+        ttk.Button(frame, text="Organize Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
 
     # ---------------- Logs ----------------
     def create_logs_tab(self, parent):
         log_frame = ttk.LabelFrame(parent, text="Live Log")
         log_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        ttk.Button(log_frame, text="Export Logs & System Usage to CSV", command=self.export_logs).pack(pady=5)
 
         self.log_area = scrolledtext.ScrolledText(log_frame, state="disabled", height=20)
         self.log_area.pack(fill="both", expand=True)
@@ -167,25 +170,45 @@ class DeskBotGUI:
             "event": message
         })
 
-    # ---------------- System Monitor ----------------
-    def update_system_stats(self):
-        stats = self.monitor.get_stats()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # ---------------- System Monitor (Threaded) ----------------
+    def start_system_monitoring(self):
+        """Start background thread to fetch system stats."""
+        self.stats_queue = queue.Queue()
+        threading.Thread(target=self._monitor_loop, daemon=True).start()
+        self.root.after(500, self._update_labels_from_queue)
 
-        self.labels["cpu"].config(text=f"CPU: {stats['cpu_percent']}%")
-        self.labels["memory"].config(text=f"Memory: {stats['memory_percent']}%")
-        self.labels["disk"].config(text=f"Disk: {stats['disk_percent']}%")
+    def _monitor_loop(self):
+        """Background thread to collect system stats."""
+        while True:
+            stats = self.monitor.get_stats()
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.stats_queue.put({
+                "timestamp": timestamp,
+                "cpu": stats['cpu_percent'],
+                "memory": stats['memory_percent'],
+                "disk": stats['disk_percent']
+            })
+            time.sleep(2)  # refresh interval
 
-        self.session_logs.append({
-            "timestamp": timestamp,
-            "type": "system",
-            "cpu": stats['cpu_percent'],
-            "memory": stats['memory_percent'],
-            "disk": stats['disk_percent'],
-            "event": ""
-        })
+    def _update_labels_from_queue(self):
+        """Update GUI labels from queue without blocking."""
+        while not self.stats_queue.empty():
+            stats = self.stats_queue.get()
+            self.labels["cpu"].config(text=f"CPU: {stats['cpu']}%")
+            self.labels["memory"].config(text=f"Memory: {stats['memory']}%")
+            self.labels["disk"].config(text=f"Disk: {stats['disk']}%")
 
-        self.root.after(5000, self.update_system_stats)
+            # store stats for CSV export
+            self.session_logs.append({
+                "timestamp": stats["timestamp"],
+                "type": "system",
+                "cpu": stats["cpu"],
+                "memory": stats["memory"],
+                "disk": stats["disk"],
+                "event": ""
+            })
+
+        self.root.after(500, self._update_labels_from_queue)
 
     # ---------------- Logging ----------------
     def append_log(self, message):
