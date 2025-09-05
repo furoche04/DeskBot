@@ -11,9 +11,14 @@
 ### Custom Directory Selection
 - Choose directories to organize at runtime via GUI
 - Supports default directories (Downloads, Desktop) as well as any folder
-  
+
+### OCR & Screenshot
+- Take screenshots and extract text via OCR
+- Choose OCR language for multi-language support
+- OCR results are saved to the project data folder and displayed in the GUI
+
 ### Simple Configuration
-- Easily set directories, backup preferences, and log levels via .env
+- Easily set directories, backup preferences, log levels, screenshot and OCR settings via .env
 
 ### Centralized Logging
 - Logs to console and rotating file (data/logs/app.log)
@@ -26,17 +31,24 @@ DeskBot/
 │
 ├── 📄 README.md
 ├── 📄 requirements.txt
-├── 📄 .env.example
-├── 📄 main.py                  # Entry point
+├── 📄 .env.example           # Example .env file
+├── 📄 main.py                # Entry point
 ├── 📂 config/
-│   └── 📄 settings.py          # Configuration management
+│ └── 📄 settings.py          # Centralized settings
 ├── 📂 core/
-│   └── 📄 file_organizer.py    # File scanning, categorization, and moving
-├── 📂 demo_files/              # Dummy files for testing purposes
+│ ├── 📄 file_organizer.py    # File scanning, categorization, and moving
+│ ├── 📄 system_monitor.py    # System resource monitoring
+│ └── 📄 ocr_processor.py     # Screenshot capture and OCR processing
+├── 📂 data/
+│ ├── 📂 backups/             # Backups
+│ ├── 📂 logs/                # Logs
+│ ├── 📂 organized_files/     # Organized files
+│ └── 📂 screenshots/         # Screenshots
+├── 📂 demo_files/            # Dummy files for testing purposes
 ├── 📂 gui/
-│   └── 📄 interface.py         # GUI interface
+│ └── 📄 interface.py         # GUI interface
 └── 📂 utils/
-    └── 📄 logger.py            # Centralized logging
+  └── 📄 logger.py            # Centralized logging
 
 ```
 
