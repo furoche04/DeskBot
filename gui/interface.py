@@ -3,29 +3,33 @@ from tkinter import ttk, scrolledtext, filedialog, messagebox
 from pathlib import Path
 from datetime import datetime
 import threading
-import queue
 import time
 import csv
 
 from core.file_organizer import FileOrganizer
 from core.system_monitor import SystemMonitor
 from core.ocr_processor import ocr_processor
+from config.settings import settings
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
+
 
 class DeskBotGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("DeskBot - Desktop Smart Organizer")
-        self.root.geometry("800x600")
+        self.root.geometry(f"{settings.WINDOW_WIDTH}x{settings.WINDOW_HEIGHT}")
 
         self.monitor = SystemMonitor()
         self.file_organizer = FileOrganizer()
         self.session_logs = []
 
+        # Auto screenshot flag
+        self.auto_screenshot_enabled = False
+
         self.create_widgets()
-        self.start_system_monitoring()  # Start system monitoring in background
+        self.update_system_stats()  # Start system monitoring
 
     # ---------------- GUI Setup ----------------
     def create_widgets(self):
@@ -46,7 +50,7 @@ class DeskBotGUI:
         system_tab = ttk.Frame(notebook)
         notebook.add(system_tab, text="System")
         self.create_system_tab(system_tab)
-
+        
         # Logs Tab
         logs_tab = ttk.Frame(notebook)
         notebook.add(logs_tab, text="Logs")
@@ -59,24 +63,30 @@ class DeskBotGUI:
 
         ttk.Button(frame, text="Organize Downloads", command=self.organize_downloads).pack(side="left", padx=5, pady=5)
         ttk.Button(frame, text="Organize Desktop", command=self.organize_desktop).pack(side="left", padx=5, pady=5)
-        ttk.Button(frame, text="Organize Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
+        ttk.Button(frame, text="Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
 
     # ---------------- Logs ----------------
     def create_logs_tab(self, parent):
-        log_frame = ttk.LabelFrame(parent, text="Live Log")
-        log_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        frame = ttk.LabelFrame(parent, text="Live Log")
+        frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        ttk.Button(log_frame, text="Export Logs & System Usage to CSV", command=self.export_logs).pack(pady=5)
-
-        self.log_area = scrolledtext.ScrolledText(log_frame, state="disabled", height=20)
+        self.log_area = scrolledtext.ScrolledText(frame, state="disabled", height=20)
         self.log_area.pack(fill="both", expand=True)
+
+        export_btn = ttk.Button(frame, text="Export Logs & System Usage to CSV", command=self.export_logs)
+        export_btn.pack(pady=5)
 
     # ---------------- OCR ----------------
     def create_ocr_tab(self, parent):
         frame = ttk.LabelFrame(parent, text="Screenshot & OCR")
         frame.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Take manual screenshot & OCR
         ttk.Button(frame, text="Take Screenshot & OCR", command=self.run_ocr).pack(pady=10)
+
+        # Auto screenshot toggle
+        self.auto_screenshot_btn = ttk.Button(frame, text="Start Auto Screenshot", command=self.toggle_auto_screenshot)
+        self.auto_screenshot_btn.pack(pady=5)
 
         self.ocr_output = scrolledtext.ScrolledText(frame, state="disabled", height=15)
         self.ocr_output.pack(fill="both", expand=True)
@@ -90,14 +100,15 @@ class DeskBotGUI:
             text_file, text = ocr_processor.screenshot_and_ocr()
 
             # Update logs
-            self.append_log(f"OCR run: saved to {text_file}")
+            log_msg = f"OCR run: saved to {text_file}"
+            self.append_log(log_msg)
             self.session_logs.append({
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "type": "ocr",
                 "cpu": None,
                 "memory": None,
                 "disk": None,
-                "event": f"OCR saved to {text_file}"
+                "event": log_msg
             })
 
             # Update OCR output in main thread
@@ -111,6 +122,51 @@ class DeskBotGUI:
         self.ocr_output.delete("1.0", "end")
         self.ocr_output.insert("end", text)
         self.ocr_output.configure(state="disabled")
+
+    # ---------------- Auto Screenshot ----------------
+    def toggle_auto_screenshot(self):
+        self.auto_screenshot_enabled = not self.auto_screenshot_enabled
+        state_msg = "started" if self.auto_screenshot_enabled else "stopped"
+        self.auto_screenshot_btn.config(
+            text="Stop Auto Screenshot" if self.auto_screenshot_enabled else "Start Auto Screenshot"
+        )
+        # Log the toggle action
+        self.append_log(f"Auto Screenshot {state_msg}")
+        self.session_logs.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": "ocr",
+            "cpu": None,
+            "memory": None,
+            "disk": None,
+            "event": f"Auto Screenshot {state_msg}"
+        })
+
+        if self.auto_screenshot_enabled:
+            threading.Thread(target=self._auto_screenshot_loop, daemon=True).start()
+
+    def _auto_screenshot_loop(self):
+        while self.auto_screenshot_enabled:
+            try:
+                text_file, _ = ocr_processor.screenshot_and_ocr()
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_msg = f"Auto OCR saved to {text_file}"
+                
+                # Update Logs tab
+                self.root.after(0, lambda msg=log_msg: self.append_log(msg))
+                
+                # Add to session logs
+                self.session_logs.append({
+                    "timestamp": timestamp,
+                    "type": "ocr",
+                    "cpu": None,
+                    "memory": None,
+                    "disk": None,
+                    "event": log_msg
+                })
+                logger.info(log_msg)
+            except Exception as e:
+                logger.error(f"Auto OCR error: {e}")
+            time.sleep(settings.AUTO_SCREENSHOT_INTERVAL)
 
     # ---------------- System ----------------
     def create_system_tab(self, parent):
@@ -170,45 +226,25 @@ class DeskBotGUI:
             "event": message
         })
 
-    # ---------------- System Monitor (Threaded) ----------------
-    def start_system_monitoring(self):
-        """Start background thread to fetch system stats."""
-        self.stats_queue = queue.Queue()
-        threading.Thread(target=self._monitor_loop, daemon=True).start()
-        self.root.after(500, self._update_labels_from_queue)
+    # ---------------- System Monitor ----------------
+    def update_system_stats(self):
+        stats = self.monitor.get_stats()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def _monitor_loop(self):
-        """Background thread to collect system stats."""
-        while True:
-            stats = self.monitor.get_stats()
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.stats_queue.put({
-                "timestamp": timestamp,
-                "cpu": stats['cpu_percent'],
-                "memory": stats['memory_percent'],
-                "disk": stats['disk_percent']
-            })
-            time.sleep(2)  # refresh interval
+        self.labels["cpu"].config(text=f"CPU: {stats['cpu_percent']}%")
+        self.labels["memory"].config(text=f"Memory: {stats['memory_percent']}%")
+        self.labels["disk"].config(text=f"Disk: {stats['disk_percent']}%")
 
-    def _update_labels_from_queue(self):
-        """Update GUI labels from queue without blocking."""
-        while not self.stats_queue.empty():
-            stats = self.stats_queue.get()
-            self.labels["cpu"].config(text=f"CPU: {stats['cpu']}%")
-            self.labels["memory"].config(text=f"Memory: {stats['memory']}%")
-            self.labels["disk"].config(text=f"Disk: {stats['disk']}%")
+        self.session_logs.append({
+            "timestamp": timestamp,
+            "type": "system",
+            "cpu": stats['cpu_percent'],
+            "memory": stats['memory_percent'],
+            "disk": stats['disk_percent'],
+            "event": ""
+        })
 
-            # store stats for CSV export
-            self.session_logs.append({
-                "timestamp": stats["timestamp"],
-                "type": "system",
-                "cpu": stats["cpu"],
-                "memory": stats["memory"],
-                "disk": stats["disk"],
-                "event": ""
-            })
-
-        self.root.after(500, self._update_labels_from_queue)
+        self.root.after(5000, self.update_system_stats)
 
     # ---------------- Logging ----------------
     def append_log(self, message):
