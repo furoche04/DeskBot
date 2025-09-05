@@ -147,4 +147,5 @@ def is_ocr_enabled():
     return settings.OCR_ENABLED
 
 def get_tesseract_path():
-    return settings.TESSERACT_PATH
+    """Return path to Tesseract executable if defined in .env, else default"""
+    return os.getenv("TESSERACT_PATH", "tesseract")
