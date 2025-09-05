@@ -50,6 +50,7 @@ class Settings:
         self.OCR_LANGUAGE = os.getenv('OCR_LANGUAGE', 'eng')
         self.OCR_MIN_CONFIDENCE = int(os.getenv('OCR_MIN_CONFIDENCE', '50'))
         self.OCR_ENABLED = os.getenv('OCR_ENABLED', 'true').lower() == 'true'
+        self.TESSERACT_PATH = os.getenv('TESSERACT_PATH', '').strip()
         
         # System monitoring settings
         self.MONITOR_INTERVAL = int(os.getenv('MONITOR_INTERVAL', '60'))  # seconds
@@ -144,3 +145,6 @@ def is_auto_organize_enabled():
 
 def is_ocr_enabled():
     return settings.OCR_ENABLED
+
+def get_tesseract_path():
+    return settings.TESSERACT_PATH
