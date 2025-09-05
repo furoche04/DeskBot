@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, filedialog
+from tkinter import ttk, scrolledtext, filedialog, messagebox
 from pathlib import Path
 from datetime import datetime
 import csv
 
 from core.file_organizer import FileOrganizer
 from core.system_monitor import SystemMonitor
+from core.ocr_processor import ocr_processor
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -25,32 +26,89 @@ class DeskBotGUI:
         self.update_system_stats()  # Start monitoring
 
     def create_widgets(self):
-        # ---------- File Organizer Frame ----------
-        organizer_frame = ttk.LabelFrame(self.root, text="File Organizer")
-        organizer_frame.pack(fill="x", padx=10, pady=5)
+        notebook = ttk.Notebook(self.root)
+        notebook.pack(fill="both", expand=True)
 
-        ttk.Button(organizer_frame, text="Organize Downloads", command=self.organize_downloads).pack(side="left", padx=5, pady=5)
-        ttk.Button(organizer_frame, text="Organize Desktop", command=self.organize_desktop).pack(side="left", padx=5, pady=5)
-        ttk.Button(organizer_frame, text="Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
+        # ---------- Organizer Tab ----------
+        organizer_tab = ttk.Frame(notebook)
+        notebook.add(organizer_tab, text="Organizer")
+        self.create_organizer_tab(organizer_tab)
 
-        ttk.Button(organizer_frame, text="Export Logs & Usage to CSV", command=self.export_logs).pack(side="right", padx=5, pady=5)
+        # ---------- Logs Tab ----------
+        logs_tab = ttk.Frame(notebook)
+        notebook.add(logs_tab, text="Logs")
+        self.create_logs_tab(logs_tab)
 
-        # ---------- Live Action Log Frame ----------
-        log_frame = ttk.LabelFrame(self.root, text="Live Log")
+        # ---------- OCR Tab ----------
+        ocr_tab = ttk.Frame(notebook)
+        notebook.add(ocr_tab, text="OCR")
+        self.create_ocr_tab(ocr_tab)
+
+        # ---------- System Tab ----------
+        system_tab = ttk.Frame(notebook)
+        notebook.add(system_tab, text="System")
+        self.create_system_tab(system_tab)
+
+    # ---------------- Organizer ----------------
+    def create_organizer_tab(self, parent):
+        frame = ttk.LabelFrame(parent, text="File Organizer")
+        frame.pack(fill="x", padx=10, pady=10)
+
+        ttk.Button(frame, text="Organize Downloads", command=self.organize_downloads).pack(side="left", padx=5, pady=5)
+        ttk.Button(frame, text="Organize Desktop", command=self.organize_desktop).pack(side="left", padx=5, pady=5)
+        ttk.Button(frame, text="Custom Directory", command=self.organize_custom_directory).pack(side="left", padx=5, pady=5)
+
+        ttk.Button(frame, text="Export Logs & Usage to CSV", command=self.export_logs).pack(side="right", padx=5, pady=5)
+
+    # ---------------- Logs ----------------
+    def create_logs_tab(self, parent):
+        log_frame = ttk.LabelFrame(parent, text="Live Log")
         log_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.log_area = scrolledtext.ScrolledText(log_frame, state="disabled", height=15)
+        self.log_area = scrolledtext.ScrolledText(log_frame, state="disabled", height=20)
         self.log_area.pack(fill="both", expand=True)
 
-        # ---------- System Monitor Frame ----------
-        monitor_frame = ttk.LabelFrame(self.root, text="System Usage")
-        monitor_frame.pack(fill="x", padx=10, pady=5)
+    # ---------------- OCR ----------------
+    def create_ocr_tab(self, parent):
+        frame = ttk.LabelFrame(parent, text="Screenshot & OCR")
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        ttk.Button(frame, text="Take Screenshot & OCR", command=self.run_ocr).pack(pady=10)
+
+        self.ocr_output = scrolledtext.ScrolledText(frame, state="disabled", height=15)
+        self.ocr_output.pack(fill="both", expand=True)
+
+    def run_ocr(self):
+        try:
+            text_file, text = ocr_processor.screenshot_and_ocr()
+            self.append_log(f"OCR run: saved to {text_file}")
+            self.session_logs.append({
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "type": "ocr",
+                "cpu": None,
+                "memory": None,
+                "disk": None,
+                "event": f"OCR saved to {text_file}"
+            })
+
+            self.ocr_output.configure(state="normal")
+            self.ocr_output.delete("1.0", "end")
+            self.ocr_output.insert("end", text)
+            self.ocr_output.configure(state="disabled")
+
+        except Exception as e:
+            messagebox.showerror("OCR Error", str(e))
+
+    # ---------------- System ----------------
+    def create_system_tab(self, parent):
+        frame = ttk.LabelFrame(parent, text="System Usage")
+        frame.pack(fill="x", padx=10, pady=5)
 
         self.labels = {}
         for metric in ["CPU", "Memory", "Disk"]:
-            frame = ttk.Frame(monitor_frame)
-            frame.pack(fill="x", pady=2)
-            label = ttk.Label(frame, text=f"{metric}: 0%")
+            row = ttk.Frame(frame)
+            row.pack(fill="x", pady=2)
+            label = ttk.Label(row, text=f"{metric}: 0%")
             label.pack(side="left", padx=5)
             self.labels[metric.lower()] = label
 
@@ -95,12 +153,10 @@ class DeskBotGUI:
         stats = self.monitor.get_stats()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Update labels
         self.labels["cpu"].config(text=f"CPU: {stats['cpu_percent']}%")
         self.labels["memory"].config(text=f"Memory: {stats['memory_percent']}%")
         self.labels["disk"].config(text=f"Disk: {stats['disk_percent']}%")
 
-        # Append to session log only (for CSV export)
         self.session_logs.append({
             "timestamp": timestamp,
             "type": "system",
@@ -110,7 +166,6 @@ class DeskBotGUI:
             "event": ""
         })
 
-        # Refresh every 5 seconds
         self.root.after(5000, self.update_system_stats)
 
     # ---------- Logging ----------
