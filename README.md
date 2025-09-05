@@ -1,6 +1,6 @@
 # 🗂️ DeskBot
 
-> Automate your file organization with a simple Python tool. This mini version focuses on automatic sorting of files in watched directories with optional backups and logging. Users can now choose directories at runtime or use default ones (Downloads, Desktop).
+> Automate your file organization, system monitoring, and OCR tasks with DeskBot. This tool provides a simple GUI to automatically sort files in watched directories (Downloads, Desktop, or custom folders), capture screenshots for OCR processing, and log actions and system usage. Users can organize files, run OCR, and export session logs and usage data to CSV — all in one interactive interface.
 
 ## ✨ Key Features
 
