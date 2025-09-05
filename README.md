@@ -86,6 +86,4 @@ A demo_files folder is included in this repository for easy testing of the Deskt
 
 ## 🔄 Next Steps & Enhancements
 
-- **Screenshots & OCR**: integrate pyautogui and pytesseract,
-- **System Monitoring**: track CPU, memory, disk usage with psutil,
-- **GUI**: add a Tkinter interface to start/stop automation and display stats.
+- **Screenshots & OCR**: integrate pyautogui and pytesseract
