@@ -3,7 +3,7 @@ import pytesseract
 from datetime import datetime
 from pathlib import Path
 from PIL import Image
-from core.settings import settings, get_screenshots_dir
+from config.settings import settings, get_screenshots_dir
 
 class OCRProcessor:
     def __init__(self):
